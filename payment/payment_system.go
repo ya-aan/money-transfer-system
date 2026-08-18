@@ -4,6 +4,7 @@ import (
 	"app-money/transaction"
 	"app-money/user"
 	"fmt"
+	"sync"
 )
 
 type PaymentSystem struct {
@@ -11,31 +12,41 @@ type PaymentSystem struct {
 	Transactions []transaction.Transcation
 }
 
-func (p *PaymentSystem) AddUser(user *user.User) {
-	p.Users[user.ID] = user
-}
-
-func (p *PaymentSystem) AddTransaction(transaction transaction.Transcation) {
-	p.Transactions = append(p.Transactions, transaction)
-}
-
-func (p *PaymentSystem) ProcessingTransactions(transaction transaction.Transcation) {
-	fromUser, ok := p.Users[transaction.FromID]
-	if !ok {
-		fmt.Println("пользователь с данным ID не найден.")
-		return
+func (ps *PaymentSystem) Worker(ch <-chan transaction.Transcation, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for t := range ch {
+		err := ps.ProcessingTransactions(t)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
 	}
-	toUser, ok := p.Users[transaction.ToID]
+}
+
+func (ps *PaymentSystem) AddUser(user *user.User) {
+	ps.Users[user.ID] = user
+}
+
+func (ps *PaymentSystem) AddTransaction(transaction transaction.Transcation) {
+	ps.Transactions = append(ps.Transactions, transaction)
+}
+
+func (ps *PaymentSystem) ProcessingTransactions(transaction transaction.Transcation) error {
+	fromUser, ok := ps.Users[transaction.FromID]
+	if !ok {
+		return fmt.Errorf("пользователь с данным ID не найден")
+	}
+	toUser, ok := ps.Users[transaction.ToID]
 
 	if !ok {
-		fmt.Println("пользователь с данным ID не найден.")
-		return
+		return fmt.Errorf("пользователь с данным ID не найден")
+
 	}
 
 	err := fromUser.Withdraw(transaction.Amount)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	toUser.Deposit(transaction.Amount)
+	return nil
 }
