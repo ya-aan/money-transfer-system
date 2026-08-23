@@ -8,6 +8,8 @@ import (
 	"sync"
 )
 
+const workerCount = 3
+
 func main() {
 	var wg sync.WaitGroup
 	user1 := &user.User{
@@ -18,7 +20,7 @@ func main() {
 	user2 := &user.User{
 		ID:      "2",
 		Name:    "Sasha",
-		Balance: 50,
+		Balance: 150,
 	}
 
 	paymentSystem := &payment.PaymentSystem{
@@ -37,11 +39,17 @@ func main() {
 		ToID:   "2",
 		Amount: 10,
 	}
+	transaction3 := transaction.Transcation{
+		FromID: "2",
+		ToID:   "1",
+		Amount: 110,
+	}
 
 	paymentSystem.AddTransaction(transaction1)
 	paymentSystem.AddTransaction(transaction2)
+	paymentSystem.AddTransaction(transaction3)
 	ch := make(chan transaction.Transcation, len(paymentSystem.Transactions))
-	for i := 0; i < len(paymentSystem.Transactions); i++ {
+	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		go paymentSystem.Worker(ch, &wg)
 	}

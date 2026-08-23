@@ -22,7 +22,7 @@ func (u *User) Withdraw(amount float64) error {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 	if u.Balance < amount {
-		return fmt.Errorf("недостаточно средств")
+		return fmt.Errorf("insufficient funds")
 	}
 	u.Balance -= amount
 	return nil

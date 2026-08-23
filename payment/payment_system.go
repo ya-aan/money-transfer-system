@@ -34,12 +34,12 @@ func (ps *PaymentSystem) AddTransaction(transaction transaction.Transcation) {
 func (ps *PaymentSystem) ProcessingTransactions(transaction transaction.Transcation) error {
 	fromUser, ok := ps.Users[transaction.FromID]
 	if !ok {
-		return fmt.Errorf("пользователь с данным ID не найден")
+		return fmt.Errorf("user not found")
 	}
 	toUser, ok := ps.Users[transaction.ToID]
 
 	if !ok {
-		return fmt.Errorf("пользователь с данным ID не найден")
+		return fmt.Errorf("user not found")
 
 	}
 
